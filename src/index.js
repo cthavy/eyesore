@@ -4,9 +4,7 @@ import './index.css';
 
 function Square(props) {
   return (
-    <button className="square" style={props.style} onClick={props.onClick}>
-      {props.value}
-    </button>
+    <button className="square" style={props.style} onClick={props.onClick}></button>
   );
 }
 
@@ -14,41 +12,63 @@ class Board extends React.Component {
   constructor(props) {
     super(props);
 
-    const MAX_ROUNDS = 10;
-    const SIGHT_TIER = ['Color-blind', 'Below Average', 'Average', 'Eagle', 'Robot']
-    const ROUND_TIMER = 10000;
+    this.MAX_ROUNDS = 10;
+    this.SIGHT_TIER = ['Color-blind', 'Below Average', 'Average', 'Eagle', 'Robot']
+    this.ROUND_TIMER = 20000;
 
     this.state = {
-      squares: Array(9).fill(null),
-      xIsNext: true,
-
       currentRound: 0,
+      score: 0,
       answerSquare: 0,
+      status: null,
+
       baseColor: 'rgb(251, 232, 106)',
       offColor: 'rgb(240, 230, 100)'
     }
   }
 
+  componentDidMount() {
+    this.nextRound();
+  }
+
   nextRound() {
-    // todo add difficulty
-    let R = Math.floor(Math.random()*245);
-    let G = Math.floor(Math.random()*245);
-    let B = Math.floor(Math.random()*245);
+    if (this.state.currentRound === this.MAX_ROUNDS) {
+      // end the game
+      return;
+    }
+
+    // add pause and turn off touch
+
+    let R = this.randomizeHelper(244);
+    let G = this.randomizeHelper(244);
+    let B = this.randomizeHelper(244);
+    let d = this.randomizeHelper(2) === 1 ? 6 : -6; // add difficulty
+
+    let answer = this.randomizeHelper(9);
 
     this.setState({
+      answerSquare: answer,
       baseColor: `rgb(${R}, ${G}, ${B})`,
-      offColor: `rgb(${R+5}, ${G+5}, ${B+5})`
+      offColor: `rgb(${R+d}, ${G+d}, ${B+d})`
     });
   }
 
-  handleClick(i) {
-    const squares = this.state.squares.slice();
-    if (this.checkAnswer(squares) || squares[i]) return;
+  randomizeHelper(base) {
+    return Math.floor(Math.random()*base);
+  }
 
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
+  handleClick(i) {
+    let score = this.state.score;
+    let status = false;
+    if (this.checkAnswer(i)) {
+      status = true;
+      score++;
+    }
+
     this.setState({
-      squares: squares,
-      xIsNext: !this.state.xIsNext
+      status: status,
+      score: score,
+      currentRound: this.state.currentRound+1
     }, this.nextRound());
   }
 
@@ -61,7 +81,6 @@ class Board extends React.Component {
 
     return (
       <Square 
-        value={this.state.squares[i]} 
         onClick={() => this.handleClick(i)}
         style={divStyle}
       />
@@ -69,11 +88,12 @@ class Board extends React.Component {
   }
 
   render() {
-    const correct = this.checkAnswer(this.state.squares);
-    let status = correct ? 'Correct' : ' ';
+    let status = this.state.status ? 'Correct' : 'Find the odd one out';
+    if (this.state.currentRound === this.MAX_ROUNDS) {
+      status = `Game is over. Score: ${this.state.score}/${this.MAX_ROUNDS}`
+    }
 
     // @todo create more squares per round
-    // @question how do we make the css flexible enough as squares grow
     return (
       <div>
         <div className="status">{status}</div>
@@ -96,11 +116,17 @@ class Board extends React.Component {
     );
   }
 
-  /** @todo
+  /**
    * Check if clicked on was correct
    * */ 
-  checkAnswer(squares) {
-    
+  checkAnswer(i) {
+    if (i === this.state.answerSquare) {
+      console.log('correct');
+      return true;
+    } else {
+      console.log('incorrect');
+      return false;
+    }
   }
 }
 

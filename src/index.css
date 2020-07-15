@@ -10,6 +10,7 @@ body {
 }
 
 .status {
+  color: #fff;
   margin-bottom: 10px;
 }
 
@@ -24,6 +25,10 @@ body {
   padding: 0;
   cursor: pointer;
   transition: all 250ms;
+}
+
+.square:focus {
+  outline: none;
 }
 
 .game {
